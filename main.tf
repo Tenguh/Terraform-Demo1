@@ -1,25 +1,8 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "4.54.0"
-    }
-  }
-}
 
-provider "aws" {
-  region = "us-east-2"
-  # Configuration options
-}
 
-variable "vpc_cidr_block" {}
-variable "subnet_cidr_block" {}
-variable "availability_zone" {}
-variable "env_prefix" {}
-variable "my_ip" {}
-variable "instance_type" {}
 
-  
+
+
 
 
 
@@ -33,6 +16,7 @@ resource "aws_vpc" "myapp-vpc" {
 resource "aws_subnet" "myapp-subnet-1" {
   vpc_id     = aws_vpc.myapp-vpc.id
   cidr_block = var.subnet_cidr_block
+  availability_zone = var.availability_zone
   tags = {
     Name : "${var.env_prefix}-subnet-1"
   }
@@ -64,14 +48,14 @@ resource "aws_default_security_group" "default-sg" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = [var.my_ip]
+    cidr_blocks      = ["0.0.0.0/0"]
   }
 
   ingress {
     from_port        = 8080
     to_port          = 8080
     protocol         = "tcp"
-    cidr_blocks      = [var.my_ip]
+    cidr_blocks      = ["0.0.0.0/0"]
 
   }
 
@@ -100,10 +84,12 @@ data "aws_ami" "latest-amazon-linux-image" {
     }
 }
 
-resource "aws_instance" "myapp-server" {
+
+
+  resource "aws_instance" "myapp-server" {
     ami = data.aws_ami.latest-amazon-linux-image.id
 instance_type = var.instance_type
-key_name= "terraform"
+key_name = "test" 
 subnet_id = aws_subnet.myapp-subnet-1.id
 vpc_security_group_ids =[aws_default_security_group.default-sg.id]
 availability_zone = var.availability_zone
@@ -114,12 +100,7 @@ tags= {
 }
 }
 
-output "aws_ami_id" {
-    value= data.aws_ami.latest-amazon-linux-image.id
-}
-output "ec2_public_ip" {
-  value = aws_instance.myapp-server.public_ip
-}
+
 
 
 
